@@ -20,13 +20,11 @@
   "Check whether encoder can encode to accepted-type.
   Accepted-type should have keys :type and :sub-type with appropriate
   values."
-  [encoder accepted-type]
-  (let [type (accepted-type :type)
-        sub-type (accepted-type :sub-type)]
-    (or (= "*" type)
-        (and (= (get-in encoder [:enc-type :type]) type)
-             (or (= "*" sub-type)
-                 (= (get-in encoder [:enc-type :sub-type]) sub-type))))))
+  [{:keys [enc-type] :as encoder} {:keys [type sub-type] :as accepted-type}]
+  (or (= "*" type)
+      (and (= (:type enc-type) type)
+           (or (= "*" sub-type)
+               (= (enc-type :sub-type) sub-type)))))
 
 (defn sort-by-check
   [by check headers]
@@ -66,7 +64,7 @@
        (sort-by-check :sub-type "*")
        (sort-by :q >)))
 
-(def parse-accept-header (memo-lu parse-accept-header* 100))
+(def parse-accept-header (memo-lu parse-accept-header* 500))
 
 (defn preferred-encoder
   "Return the encoder that encodes to the most preferred type.
@@ -218,6 +216,7 @@
 (def format-encoders
   {:json (make-encoder json/generate-string "application/json")
    :edn (make-encoder generate-native-clojure "application/edn")
+   :clojure (make-encoder generate-native-clojure "application/clojure")
    :yaml (make-encoder yaml/generate-string "application/x-yaml")
    :yaml-in-html (make-encoder wrap-yaml-in-html "text/html")})
 
@@ -229,15 +228,36 @@
   [handler & {:keys [handle-error formats charset]
               :or {handle-error default-handle-error
                    charset "utf-8"
-                   formats [:json :yaml :edn :yaml-in-html]}}]
-  (let [encoders (into []
-                       (map (fn [format]
-                              (if-let [encoder (get format-encoders (keyword format))]
-                                encoder
-                                (throw
-                                 (java.util.UnknownFormatFlagsException.
-                                  (format "wrap-restful-response does not recognize format %s" (keyword format))))))
-                            formats))]
+                   formats [:json :yaml :edn :clojure :yaml-in-html]}}]
+  (let [encoders (for [format formats
+                       :when format
+                       :let [encoder (if (map? format)
+                                       format
+                                       (get format-encoders (keyword format)))]
+                       :when encoder]
+                   encoder)]
+    (wrap-format-response handler
+                          :predicate serializable?
+                          :encoders encoders
+                          :charset charset
+                          :handle-error handle-error)))
+
+(defn wrap-restful-response
+  "Wrapper that tries to do the right thing with the response :body
+  and provide a solid basis for a RESTful API. It will serialize to
+  JSON, YAML, Clojure or HTML-wrapped YAML depending on Accept header.
+  See wrap-format-response for more details."
+  [handler & {:keys [handle-error formats charset]
+              :or {handle-error default-handle-error
+                   charset "utf-8"
+                   formats [:json :yaml :edn :clojure :yaml-in-html]}}]
+  (let [encoders (for [format formats
+                       :when format
+                       :let [encoder (if (map? format)
+                                       format
+                                       (get format-encoders (keyword format)))]
+                       :when encoder]
+                   encoder)]
     (wrap-format-response handler
                           :predicate serializable?
                           :encoders encoders

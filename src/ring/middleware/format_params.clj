@@ -77,24 +77,22 @@
                     the Exception"
   [handler & {:keys [predicate decoder charset handle-error]}]
   (fn [{:keys [#^InputStream body] :as req}]
-    (let [mod-req
-          (try
-            (if-let [byts (slurp-to-bytes body)]
-              (if (predicate req)
-                (let [body (:body req)
-                      #^String char-enc (if (string? charset) charset (charset (assoc req :body byts)))
-                      bstr (String. byts char-enc)
-                      fmt-params (decoder bstr)
-                      req* (assoc req
-                             :body-params fmt-params
-                             :params (merge (:params req)
-                                            (when (map? fmt-params) fmt-params)))]
-                  req*)
-                (assoc req :body (ByteArrayInputStream. byts)))
-              req)
-            (catch Exception e
-              (handle-error e handler req)))]
-      (handler mod-req))))
+    (try
+      (if-let [byts (slurp-to-bytes body)]
+        (if (predicate req)
+          (let [body (:body req)
+                #^String char-enc (if (string? charset) charset (charset (assoc req :body byts)))
+                bstr (String. byts char-enc)
+                fmt-params (decoder bstr)
+                req* (assoc req
+                       :body-params fmt-params
+                       :params (merge (:params req)
+                                      (when (map? fmt-params) fmt-params)))]
+            (handler req*))
+          (handler (assoc req :body (ByteArrayInputStream. byts))))
+        (handler req))
+      (catch Exception e
+        (handle-error e handler req)))))
 
 (def json-request?
   (make-type-request-pred #"^application/(vnd.+)?json"))
@@ -141,7 +139,7 @@
     (safe-read-string s)))
 
 (def clojure-request?
-  (make-type-request-pred #"^application/(vnd.+)?(x-)?clojure"))
+  (make-type-request-pred #"^application/(vnd.+)?(x-)?(clojure|edn)"))
 
 (defn wrap-clojure-params
   "Handles body params in Clojure format. See wrap-format-params for details."
@@ -159,10 +157,7 @@
 (def format-wrappers
   {:json wrap-json-params
    :edn wrap-clojure-params
-   :clj wrap-clojure-params
-   :clojure wrap-clojure-params
-   :yaml wrap-yaml-params
-   :yml wrap-yaml-params})
+   :yaml wrap-yaml-params})
 
 (defn wrap-restful-params
   "Wrapper that tries to do the right thing with the request :body and provide
@@ -172,8 +167,9 @@
               :or {handle-error default-handle-error
                    formats [:json :edn :yaml]}}]
   (reduce (fn [h format]
-            (if-let [wrapper (format-wrappers (keyword format))]
+            (if-let [wrapper (if
+                              (fn? format) format
+                              (format-wrappers (keyword format)))]
               (wrapper h :handle-error handle-error)
-              (throw (java.util.UnknownFormatFlagsException.
-                      (format "wrap-restful-params does not recognize format %s" (keyword format))))))
+              h))
           handler formats))

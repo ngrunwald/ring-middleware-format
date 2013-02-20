@@ -156,13 +156,24 @@
                       :charset charset
                       :handle-error handle-error))
 
+(def format-wrappers
+  {:json wrap-json-params
+   :edn wrap-clojure-params
+   :clj wrap-clojure-params
+   :clojure wrap-clojure-params
+   :yaml wrap-yaml-params
+   :yml wrap-yaml-params})
+
 (defn wrap-restful-params
   "Wrapper that tries to do the right thing with the request :body and provide
    a solid basis for a RESTful API. It will deserialize to JSON, YAML or Clojure
    depending on Content-Type header. See wrap-format-response for more details."
-  [handler & {:keys [handle-error]
-              :or {handle-error default-handle-error}}]
-  (-> handler
-      (wrap-json-params :handle-error handle-error)
-      (wrap-clojure-params :handle-error handle-error)
-      (wrap-yaml-params :handle-error handle-error)))
+  [handler & {:keys [handle-error formats]
+              :or {handle-error default-handle-error
+                   formats [:json :edn :yaml]}}]
+  (reduce (fn [h format]
+            (if-let [wrapper (format-wrappers (keyword format))]
+              (wrapper h :handle-error handle-error)
+              (throw (java.util.UnknownFormatFlagsException.
+                      (format "wrap-restful-params does not recognize format %s" (keyword format))))))
+          handler formats))

@@ -165,7 +165,7 @@
   [handler & {:keys [predicate encoder type charset hf handle-error]
               :or {predicate serializable?
                    encoder generate-native-clojure
-                   type "application/clojure"
+                   type "application/edn"
                    charset "utf-8"
                    hf false
                    handle-error default-handle-error}}]
@@ -215,26 +215,31 @@
                         :charset charset
                         :handle-error handle-error))
 
+(def format-encoders
+  {:json (make-encoder json/generate-string "application/json")
+   :edn (make-encoder generate-native-clojure "application/edn")
+   :yaml (make-encoder yaml/generate-string "application/x-yaml")
+   :yaml-in-html (make-encoder wrap-yaml-in-html "text/html")})
+
 (defn wrap-restful-response
   "Wrapper that tries to do the right thing with the response :body
   and provide a solid basis for a RESTful API. It will serialize to
   JSON, YAML, Clojure or HTML-wrapped YAML depending on Accept header.
-  It takes an optional :default parameter wich is an encoder-map (JSON
-  by default). See wrap-format-response for more details."
-  [handler & {:keys [default handle-error]
-              :or {default (make-encoder json/generate-string
-                                         "application/json")
-                   handle-error default-handle-error}}]
-  (wrap-format-response handler
-                        :predicate serializable?
-                        :encoders [(make-encoder json/generate-string
-                                                 "application/json")
-                                   (make-encoder yaml/generate-string
-                                                 "application/x-yaml")
-                                   (make-encoder generate-native-clojure
-                                                 "application/clojure")
-                                   (make-encoder wrap-yaml-in-html
-                                                 "text/html")
-                                   default]
-                        :charset "utf-8"
-                        :handle-error handle-error))
+  See wrap-format-response for more details."
+  [handler & {:keys [handle-error formats charset]
+              :or {handle-error default-handle-error
+                   charset "utf-8"
+                   formats [:json :yaml :edn :yaml-in-html]}}]
+  (let [encoders (into []
+                       (map (fn [format]
+                              (if-let [encoder (get format-encoders (keyword format))]
+                                encoder
+                                (throw
+                                 (java.util.UnknownFormatFlagsException.
+                                  (format "wrap-restful-response does not recognize format %s" (keyword format))))))
+                            formats))]
+    (wrap-format-response handler
+                          :predicate serializable?
+                          :encoders encoders
+                          :charset charset
+                          :handle-error handle-error)))

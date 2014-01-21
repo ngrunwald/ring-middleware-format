@@ -59,6 +59,13 @@
     (is (.contains (get-in resp [:headers "Content-Type"]) "application/x-yaml"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
+(deftest html-escape-yaml-in-html
+  (let [req {:body {:foo "<bar>"}}
+        resp ((wrap-yaml-in-html-response identity) req)
+        body (slurp (:body resp))]
+    (is (.contains body "&lt;"))
+    (is (.contains body "&gt;"))))
+
 (deftest can-encode?-accept-any-type
   (is (can-encode? {:enc-type {:type "foo" :sub-type "bar"}}
                    {:type "*" :sub-type "*"})))

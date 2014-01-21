@@ -196,7 +196,7 @@
   [body]
   (str
    "<html>\n<head></head>\n<body><div><pre>\n"
-   (yaml/generate-string body)
+   (org.apache.commons.lang3.StringEscapeUtils/escapeHtml4 (yaml/generate-string body))
    "</pre></div></body></html>"))
 
 (defn wrap-yaml-in-html-response

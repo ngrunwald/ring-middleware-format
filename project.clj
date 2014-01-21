@@ -12,4 +12,5 @@
                  [cheshire "5.2.0"]
                  [org.clojure/tools.reader "0.7.10"]
                  [com.ibm.icu/icu4j "52.1"]
-                 [clj-yaml "0.4.0"]])
+                 [clj-yaml "0.4.0"]
+                 [org.apache.commons/commons-lang3 "3.1"]])

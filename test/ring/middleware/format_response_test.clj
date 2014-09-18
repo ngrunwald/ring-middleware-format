@@ -175,11 +175,13 @@
                                               :sub-type "edn"}}]
                                  req)))))
 
+(defn echo-with-default-body [req] (assoc req :body (get req :body {})))
+
 (def restful-echo
-  (wrap-restful-response identity))
+  (wrap-restful-response echo-with-default-body))
 
 (def safe-restful-echo
-  (wrap-restful-response identity
+  (wrap-restful-response echo-with-default-body
                          :handle-error (fn [_ _ _] {:status 500})
                          :formats
                          [(make-encoder (fn [_] (throw (RuntimeException. "Memento mori")))

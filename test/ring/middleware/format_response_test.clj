@@ -12,6 +12,17 @@
 (def json-echo
   (wrap-json-response identity))
 
+(deftest noop-with-nil
+  (let [body nil
+        req {:body body}
+        resp (json-echo req)]
+    (is (= nil (:body resp)))))
+
+(deftest noop-with-missing-body
+  (let [req {:status 200}
+        resp (json-echo req)]
+    (is (= nil (:body resp)))))
+
 (deftest noop-with-string
   (let [body "<xml></xml>"
         req {:body body}

@@ -181,7 +181,7 @@
                         ctype (str (enc-type :type) "/" (enc-type :sub-type))]
                     [body* ctype])
                   (let [^String char-enc (if (string? charset) charset (charset req))
-                        ^String body-string (encoder body)
+                        ^String body-string (if (nil? body) "" (encoder body))
                         body* (.getBytes body-string char-enc)
                         ctype (str (enc-type :type) "/" (enc-type :sub-type)
                                    "; charset=" char-enc)]

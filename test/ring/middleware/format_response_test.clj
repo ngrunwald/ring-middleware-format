@@ -222,4 +222,5 @@
                  wrap-restful-response)
         resp (handler req)]
     (is (= "application/json; charset=utf-8" (get-in resp [:headers "Content-Type"])))
+    (is (= "0" (get-in resp [:headers "Content-Length"])))
     (is (nil? (:body resp)))))

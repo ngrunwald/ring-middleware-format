@@ -188,7 +188,7 @@
                     [body* ctype]))
                   body-length (count body*)]
             (-> response
-                (assoc :body (io/input-stream body*))
+                (assoc :body (if (pos? body-length) (io/input-stream body*) nil))
                 (res/content-type content-type)
                 (res/header "Content-Length" body-length)))
           response)

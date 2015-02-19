@@ -185,7 +185,7 @@
     (is (= 500 (get (safe-restful-echo {:status 200
                                         :headers {"accept" "foo/bar"}
                                         ; a non serializable, non-nil body is required, otherwise
-                                        ; teh response is passed through unchanged
+                                        ; the response is passed through unchanged
                                         :body {}}) :status)))))
 
 (deftest format-restful-hashmap

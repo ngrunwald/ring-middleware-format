@@ -46,13 +46,20 @@
 (defn key-fn [s]
   (-> s (string/replace #"_" "-") keyword))
 
+(defn custom-json-decoder [_]
+  {:result "decoded with custom decoder"})
+
 (deftest json-options-test
   (is (= {:foo-bar "bar"}
-         (:body-params ((wrap-json-params identity {:options {:key-fn key-fn}})
+         (:body-params ((wrap-json-params identity {:decoder-options {:key-fn key-fn}})
                         {:content-type "application/json"
                          :body (stream "{\"foo_bar\":\"bar\"}")}))))
   (is (= {:foo-bar "bar"}
-         (:body-params ((wrap-restful-params identity {:format-options {:json {:key-fn key-fn}}})
+         (:body-params ((wrap-restful-params identity {:format-options {:json {:decoder-options {:key-fn key-fn}}}})
+                        {:content-type "application/json"
+                         :body (stream "{\"foo_bar\":\"bar\"}")}))))
+  (is (= {:result "decoded with custom decoder"}
+         (:body-params ((wrap-restful-params identity {:format-options {:json {:decoder custom-json-decoder}}})
                         {:content-type "application/json"
                          :body (stream "{\"foo_bar\":\"bar\"}")})))))
 
@@ -226,14 +233,22 @@
 
 (defrecord Point [x y])
 
-(def readers
+(def custom-handlers
   {"Point" (transit/read-handler (fn [[x y]] (Point. x y)))})
 
+(defn custom-transit-decoder
+  [in]
+  (let [reader (transit/reader in :json {:handlers custom-handlers})]
+    (transit/read reader)))
+
 (def custom-transit-json-echo
-  (wrap-transit-json-params identity :options {:handlers readers}))
+  (wrap-transit-json-params identity :decoder-options {:handlers custom-handlers}))
 
 (def custom-restful-transit-json-echo
-  (wrap-restful-params identity :format-options {:transit-json {:handlers readers}}))
+  (wrap-restful-params identity :format-options {:transit-json {:decoder-options {:handlers custom-handlers}}}))
+
+(def custom-decoder-restful-transit-json-echo
+  (wrap-restful-params identity :format-options {:transit-json {:decoder custom-transit-decoder}}))
 
 (def transit-body "[\"^ \", \"~:p\", [\"~#Point\",[1,2]]]")
 
@@ -244,9 +259,17 @@
       (is (= {:p (Point. 1 2)}
              (:params parsed-req)
              (:body-params parsed-req)))))
+
   (testing "wrap-restful-params, transit options"
     (let [req (custom-restful-transit-json-echo {:content-type "application/transit+json"
                                                  :body (stream transit-body)})]
+      (is (= {:p (Point. 1 2)}
+             (:params req)
+             (:body-params req)))))
+
+  (testing "wrap-restful-params, custom decoder"
+    (let [req (custom-decoder-restful-transit-json-echo {:content-type "application/transit+json"
+                                                         :body (stream transit-body)})]
       (is (= {:p (Point. 1 2)}
              (:params req)
              (:body-params req))))))

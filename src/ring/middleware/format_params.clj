@@ -132,19 +132,19 @@
 (defn wrap-json-params
   "Handles body params in JSON format. See [[wrap-format-params]] for details."
   [handler & args]
-  (let [{:keys [predicate decoder options] :as opts} (impl/extract-options args)]
+  (let [{:keys [predicate decoder decoder-options] :as opts} (impl/extract-options args)]
     (wrap-format-params handler (assoc opts
                                        :predicate (or predicate json-request?)
-                                       :decoder (or decoder (make-json-decoder options))))))
+                                       :decoder (or decoder (make-json-decoder decoder-options))))))
 
 (defn wrap-json-kw-params
   "Handles body params in JSON format. Parses map keys as keywords.
    See [[wrap-format-params]] for details."
   [handler & args]
-  (let [{:keys [predicate decoder options] :as opts} (impl/extract-options args)]
+  (let [{:keys [predicate decoder decoder-options] :as opts} (impl/extract-options args)]
     (wrap-format-params handler (assoc opts
                                        :predicate (or predicate json-request?)
-                                       :decoder (or decoder (make-json-decoder (assoc options :key-fn true)))))))
+                                       :decoder (or decoder (make-json-decoder (assoc decoder-options :key-fn true)))))))
 
 (def ^:no-doc msgpack-request?
   (make-type-request-pred #"^application/(vnd.+)?(x-)?msgpack"))
@@ -223,29 +223,29 @@
   (make-type-request-pred #"^application/(vnd.+)?(x-)?transit\+json"))
 
 (defn wrap-transit-json-params
-  "Handles body params in transit format over **JSON**. You can use an *:options* key to pass
+  "Handles body params in transit format over **JSON**. You can use an *:decoder-options* key to pass
    a map with *:handlers* and *:default-handler* to transit-clj. See [[wrap-format-params]]
    for details."
   [handler & args]
-  (let [{:keys [predicate decoder binary? options] :as options} (impl/extract-options args)]
+  (let [{:keys [predicate decoder binary? decoder-options] :as opts} (impl/extract-options args)]
     (wrap-format-params handler
-                        (assoc options
+                        (assoc opts
                                :predicate (or predicate transit-json-request?)
-                               :decoder (or decoder (make-transit-decoder :json options))
+                               :decoder (or decoder (make-transit-decoder :json decoder-options))
                                :binary? (if (nil? binary?) true binary?)))))
 
 (def ^:no-doc transit-msgpack-request?
   (make-type-request-pred #"^application/(vnd.+)?(x-)?transit\+msgpack"))
 
 (defn wrap-transit-msgpack-params
-  "Handles body params in transit format over **msgpack**. You can use an *:options* key to pass
+  "Handles body params in transit format over **msgpack**. You can use an *:decoder-options* key to pass
    a map with *:handlers* and *:default-handler* to transit-clj. See [[wrap-format-params]] for details."
   [handler & args]
-  (let [{:keys [predicate decoder binary? options] :as options} (impl/extract-options args)]
+  (let [{:keys [predicate decoder binary? decoder-options] :as opts} (impl/extract-options args)]
     (wrap-format-params handler
-                        (assoc options
+                        (assoc opts
                                :predicate (or predicate transit-msgpack-request?)
-                               :decoder (or decoder (make-transit-decoder :msgpack options))
+                               :decoder (or decoder (make-transit-decoder :msgpack decoder-options))
                                :binary? (if (nil? binary?) true binary?)))))
 
 (def ^:no-doc format-wrappers
@@ -266,15 +266,15 @@
    a solid basis for a RESTful API. It will deserialize to *JSON*, *YAML*, *Transit*
    or *Clojure* depending on Content-Type header. See [[wrap-format-params]] for
    more details.
-   Options to specific format decoders can be passed in using *:format-options*
-   option. If should be map of format keyword to options map."
+   Options to specific format can be passed in using *:format-options* option.
+   It should be map of format keyword to options map."
   [handler & args]
   (let [{:keys [formats format-options] :as options} (impl/extract-options args)
         common-options (dissoc options :formats :format-options)]
     (reduce (fn [h format]
-              (if-let [wrapper (if
-                                 (fn? format) format
+              (if-let [wrapper (if (fn? format)
+                                 format
                                  (format-wrappers (keyword format)))]
-                (wrapper h (assoc common-options :options (get format-options format)))
+                (wrapper h (merge common-options (get format-options format)))
                 h))
             handler (or formats default-formats))))

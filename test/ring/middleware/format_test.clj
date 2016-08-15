@@ -22,6 +22,15 @@
   (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))
                        :formats [:yaml-kw]))
 
+(deftest format-json-prettily-from-wrap-restful-format
+  ;; like format-response-test/format-json-prettily but starting from higher in the call stack
+  (let [body {:foo "bar"}
+        req {:body body}
+        resp ((wrap-restful-format identity :formats [:json-kw]
+                                            :response-options {:json-kw {:pretty true}})
+               req)]
+    (is (.contains (-> resp :body slurp) "\n "))))
+
 (deftest test-restful-round-trip
   (let [ok-accept "application/edn"
         msg {:test :ok}

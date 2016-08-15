@@ -64,6 +64,14 @@ Please note the default JSON, MessagePack, and YAML decoder do not keywordize th
 
 See also [wrap-restful-format](http://ngrunwald.github.com/ring-middleware-format/ring.middleware.format.html#var-wrap-restful-format) docstring for help on customizing error handling.
 
+It is possible to configure the behavior of various decoders by passing `:response-options` 
+or `:params-options` parameters to `(wrap-restful-format)`; these options are structured as 
+a map from the type of decoder to the options to use for that format. For example, to pretty-print 
+JSON responses these options could be used:
+```clojure
+(wrap-restful-format handler :formats [:json-kw] :response-options {:json-kw {:pretty true}})
+```
+
 ## Usage ##
 
 ### Detailed Usage ###

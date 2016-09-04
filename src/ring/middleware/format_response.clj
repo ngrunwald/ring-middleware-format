@@ -205,7 +205,7 @@
             (handle-error e req response)))))))
 
 (defn make-json-encoder [pretty options]
-  (let [opts (assoc options :pretty pretty)]
+  (let [opts (merge {:pretty pretty} options)]
     (fn [s]
       (json/generate-string s opts))))
 

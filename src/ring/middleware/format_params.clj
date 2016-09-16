@@ -18,11 +18,11 @@
   (into #{} (map str/lower-case (.keySet (Charset/availableCharsets)))))
 
 (defn ^:no-doc guess-charset
-  [{:keys [#^bytes body]}]
+  [{:keys [body]}]
   (try
     (let [#^CharsetDetector detector (CharsetDetector.)]
       (.enableInputFilter detector true)
-      (.setText detector body)
+      (.setText detector #^bytes body)
       (let [m (.detect detector)
             encoding (.getName m)]
         (if (available-charsets encoding)

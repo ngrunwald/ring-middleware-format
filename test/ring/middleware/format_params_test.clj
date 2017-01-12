@@ -10,7 +10,9 @@
             [clojure.string :as string])
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream]))
 
-(defn stream [s]
+(set! *warn-on-reflection* true)
+
+(defn stream [^String s]
   (ByteArrayInputStream. (.getBytes s "UTF-8")))
 
 (def json-echo
@@ -187,7 +189,7 @@
     (is (= 500 (get (safe-restful-echo (assoc req :body (stream "{:foo \"bar}"))) :status)))
     (is (= 500 (get (safe-restful-echo-opts-map (assoc req :body (stream "{:foo \"bar}"))) :status)))))
 
-(defn stream-iso [s]
+(defn stream-iso [^String s]
   (ByteArrayInputStream. (.getBytes s "ISO-8859-1")))
 
 (deftest test-different-params-charset

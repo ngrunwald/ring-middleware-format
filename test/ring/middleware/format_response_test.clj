@@ -1,4 +1,5 @@
 (ns ring.middleware.format-response-test
+  (:refer-clojure :exclude [contains?])
   (:use [clojure.test]
         [ring.middleware.format-response])
   (:require [cheshire.core :as json]
@@ -9,8 +10,13 @@
             [clojure.string :as string])
   (:import [java.io ByteArrayInputStream InputStream ByteArrayOutputStream]))
 
-(defn stream [s]
+(set! *warn-on-reflection* true)
+
+(defn stream [^String s]
   (ByteArrayInputStream. (.getBytes s "UTF-8")))
+
+(defn contains? [^String s h]
+  (.contains s h))
 
 (def json-echo
   (wrap-json-response identity))
@@ -32,27 +38,27 @@
         req {:body body}
         resp (json-echo req)]
     (is (= (json/generate-string body) (slurp (:body resp))))
-    (is (.contains (get-in resp [:headers "Content-Type"]) "application/json"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "application/json"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (deftest format-json-prettily
   (let [body {:foo "bar"}
         req {:body body}
         resp ((wrap-json-response identity :pretty true) req)]
-    (is (.contains (slurp (:body resp)) "\n "))))
+    (is (contains? (slurp (:body resp)) "\n "))))
 
 (deftest returns-correct-charset
   (let [body {:foo "bârçï"}
         req {:body body :headers {"accept-charset" "utf-8; q=0.8 , utf-16"}}
         resp ((wrap-json-response identity) req)]
-    (is (.contains (get-in resp [:headers "Content-Type"]) "utf-16"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "utf-16"))
     (is (= 32 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (deftest returns-utf8-by-default
   (let [body {:foo "bârçï"}
         req {:body body :headers {"accept-charset" "foo"}}
         resp ((wrap-json-response identity) req)]
-    (is (.contains (get-in resp [:headers "Content-Type"]) "utf-8"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "utf-8"))
     (is (= 18 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (deftest format-json-options
@@ -86,7 +92,7 @@
         req {:body body}
         resp (msgpack-echo req)]
     (is (= body (keywordize-keys (msgpack/unpack (slurp-to-bytes (:body resp))))))
-    (is (.contains (get-in resp [:headers "Content-Type"]) "application/msgpack"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "application/msgpack"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (def clojure-echo
@@ -97,7 +103,7 @@
         req {:body body}
         resp (clojure-echo req)]
     (is (= body (read-string (slurp (:body resp)))))
-    (is (.contains (get-in resp [:headers "Content-Type"]) "application/edn"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "application/edn"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (def yaml-echo
@@ -108,7 +114,7 @@
         req {:body body}
         resp (yaml-echo req)]
     (is (= (yaml/generate-string body) (slurp (:body resp))))
-    (is (.contains (get-in resp [:headers "Content-Type"]) "application/x-yaml"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "application/x-yaml"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (deftest html-escape-yaml-in-html
@@ -134,7 +140,7 @@
         req {:body body}
         resp (transit-json-echo req)]
     (is (= body (read-transit :json (:body resp))))
-    (is (.contains (get-in resp [:headers "Content-Type"]) "application/transit+json"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "application/transit+json"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (def transit-msgpack-echo
@@ -145,7 +151,7 @@
         req {:body body}
         resp (transit-msgpack-echo req)]
     (is (= body (read-transit :msgpack (:body resp))))
-    (is (.contains (get-in resp [:headers "Content-Type"]) "application/transit+msgpack"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "application/transit+msgpack"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -229,7 +235,7 @@
         ok-req {:headers {"accept" ok-accept}}]
     (is (= (get-in (restful-echo ok-req) [:headers "Content-Type"])
            "application/edn; charset=utf-8"))
-    (is (.contains (get-in (restful-echo {:headers {"accept" "foo/bar"}})
+    (is (contains? (get-in (restful-echo {:headers {"accept" "foo/bar"}})
                            [:headers "Content-Type"])
                    "application/json"))
     (is (= 500 (get (safe-restful-echo {:status 200
@@ -252,11 +258,11 @@
                     "text/html"]]
       (let [req {:body body :headers {"accept" accept}}
             resp (restful-echo req)]
-        (is (.contains (get-in resp [:headers "Content-Type"]) accept))
+        (is (contains? (get-in resp [:headers "Content-Type"]) accept))
         (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
     (let [req {:body body}
           resp (restful-echo req)]
-      (is (.contains (get-in resp [:headers "Content-Type"]) "application/json"))
+      (is (contains? (get-in resp [:headers "Content-Type"]) "application/json"))
       (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"])))))))
 
 (def custom-restful-echo
@@ -268,7 +274,7 @@
 (deftest format-custom-restful-hashmap
   (let [req {:body {:foo "bar"} :headers {"accept" "text/foo"}}
         resp (custom-restful-echo req)]
-    (is (.contains (get-in resp [:headers "Content-Type"]) "text/foo"))
+    (is (contains? (get-in resp [:headers "Content-Type"]) "text/foo"))
     (is (< 2 (Integer/parseInt (get-in resp [:headers "Content-Length"]))))))
 
 (deftest nil-body-handling

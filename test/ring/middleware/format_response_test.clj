@@ -170,15 +170,43 @@
     (is (not (can-encode? encoder
                           {:type "foo" :sub-type "buzz"})))))
 
+(deftest parse-accept-header-test
+  (testing "Accept header media-ranges can contain parameters"
+    (is (= [{:type "multipart"
+             :sub-type "form-data"
+             :boundary "x"
+             :charset "US-ASCII"
+             :q 1.0}]
+           (parse-accept-header* "multipart/form-data; boundary=x; charset=US-ASCII"))))
+
+  (testing "Non-numberic q value is ignored"
+    (is (= [{:type "text"
+             :sub-type "*"
+             :q 1.0}]
+           (parse-accept-header* "text/*;q=x") )))
+
+  (testing "Separators in parameter values (e.g. =) are forbidden"
+    (is (= [{:type "text"
+             :sub-type "*"
+             :q 1.0}]
+           (parse-accept-header* "text/*;x=0.0=x") ))
+
+    (testing "except if quoted"
+      (is (= [{:type "text"
+               :sub-type "*"
+               :q 1.0
+               :x "\"0.0=x\""}]
+             (parse-accept-header* "text/*;x=\"0.0=x\""))))))
+
 (deftest orders-values-correctly
   (let [accept "text/plain, */*, text/plain;level=1, text/*, text/*;q=0.1"]
     (is (= (parse-accept-header accept)
            (list {:type "text"
                   :sub-type "plain"
-                  :media-range-params {:level "1"}
                   :q 1.0}
                  {:type "text"
                   :sub-type "plain"
+                  :level "1"
                   :q 1.0}
                  {:type "text"
                   :sub-type "*"
@@ -326,42 +354,3 @@
          (slurp (:body (custom-transit-echo transit-resp)))))
   (is (= "[\"~#Point\",[1,2]]"
          (slurp (:body (custom-restful-transit-echo (assoc transit-resp :headers {"accept" "application/transit+json"})))))))
-
-;;
-;; Github
-;;
-
-;; Issue #66 - Preferred-encoder defaults to request :content-type (deprecated ring field) if
-;; accept header is not present.
-
-(deftest issue-66
-  (let [req {:content-type "multipart/form-data; boundary=x; charset=US-ASCII"}]
-    (is (= "application/json; charset=utf-8"
-           (get-in (restful-echo req) [:headers "Content-Type"]))))
-
-  (testing "This is a Content-Type header value, but it should be parseable as Accept header"
-    (is (= [{:type "multipart"
-             :sub-type "form-data"
-             :media-range-params {:boundary "x"
-                                  :charset "US-ASCII"}
-             :q 1.0}]
-           (parse-accept-header* "multipart/form-data; boundary=x; charset=US-ASCII"))))
-
-  (testing "Allow multiple media-type parameters without q"
-    (is (= (list {:type "text"
-                  :sub-type "plain"
-                  :media-range-params {:level "1"
-                                       :foo "bar"}
-                  :q 1.0}
-                 {:type "text"
-                  :sub-type "*"
-                  :q 0.8
-                  :media-range-params {:media-type "1"}
-                  :accept-params {:accept-param "1"}})
-           (parse-accept-header* "text/plain;level=1;foo=bar, text/*;media-type=1;q=0.8;accept-param=1;q=0.5"))))
-
-  (testing "Bad q value?"
-    (is (= [{:type "text"
-             :sub-type "*"
-             :q 1.0}]
-           (parse-accept-header* "text/*;q=x") ))))

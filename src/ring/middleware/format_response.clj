@@ -47,33 +47,42 @@
                       :else -1))
            headers))
 
+;; From Liberator: https://github.com/clojure-liberator/liberator/blob/master/src/liberator/conneg.clj#L13
+(def ^:private accept-fragment-re
+  #"^\s*(\*|[^()<>@,;:\"/\[\]?={}         ]+)/(\*|[^()<>@,;:\"/\[\]?={}         ]+)$")
+
+(def ^:private accept-fragment-param-re
+  #"([^()<>@,;:\"/\[\]?={} 	]+)=([^()<>@,;:\"/\[\]?={} 	]+|\"[^\"]*\")$")
+
+(defn- parse-q [s]
+  (try
+    (->> (Double/parseDouble s)
+         (min 1)
+         (max 0))
+    (catch NumberFormatException e
+      nil)))
+
 (defn parse-accept-header*
   "Parse Accept headers into a sorted sequence of maps.
   \"application/json;level=1;q=0.4\"
   => ({:type \"application\" :sub-type \"json\"
-       :q 0.4 :parameter \"level=1\"})"
+       :q 0.4 :level \"1\"})"
   [accept-header]
-  (->> (map (fn [val]
-              (let [[media-range & rest] (s/split (s/trim val) #";")
-                    type (zipmap [:type :sub-type] (s/split (s/trim media-range) #"/"))]
-                (-> type
+  (->> (map (fn [fragment]
+              (let [[media-range & r] (s/split fragment #"\s*;\s*")
+                    [type sub-type :as f] (rest (re-matches accept-fragment-re media-range))]
+                (-> {:type type
+                     :sub-type sub-type}
                     (merge (reduce (fn [m s]
-                                     (let [[_ k v] (re-matches #"([^=]*)=(.*)" s)
-                                           k (keyword (s/trim k))]
-                                       (if (= :q k)
-                                         (update m :q #(or % (try
-                                                               (Double/parseDouble v)
-                                                               (catch NumberFormatException e
-                                                                 nil))))
-                                         (if (:q m)
-                                           (update m :accept-params assoc k v)
-                                           (update m :media-range-params assoc k v)))))
+                                     (if-let [[k v] (seq (rest (re-matches accept-fragment-param-re s)))]
+                                       (if (= "q" k)
+                                         (update-in m [:q] #(or % (parse-q v)))
+                                         (assoc m (keyword k) v))
+                                       m))
                                    {}
-                                   rest))
-                    (update :q #(or % 1.0)))))
-            (s/split accept-header #","))
-       (sort-by-check :accept-params nil)
-       (sort-by-check :media-range-params nil)
+                                   r))
+                    (update-in [:q] #(or % 1.0)))))
+            (s/split accept-header #"[\s\n\r]*,[\s\n\r]"))
        (sort-by-check :type "*")
        (sort-by-check :sub-type "*")
        (sort-by :q >)))

@@ -55,24 +55,25 @@
   [accept-header]
   (->> (map (fn [val]
               (let [[media-range & rest] (s/split (s/trim val) #";")
-                    type (zipmap [:type :sub-type]
-                                 (s/split (s/trim media-range) #"/"))]
-                (cond (nil? rest)
-                      (assoc type :q 1.0)
-                      (= (first (s/triml (first rest)))
-                         \q) ;no media-range params
-                      (assoc type :q
-                             (Double/parseDouble
-                              (second (s/split (first rest) #"="))))
-                      :else
-                      (assoc (if-let [q-val (second rest)]
-                               (assoc type :q
-                                      (Double/parseDouble
-                                       (second (s/split q-val #"="))))
-                               (assoc type :q 1.0))
-                        :parameter (s/trim (first rest))))))
+                    type (zipmap [:type :sub-type] (s/split (s/trim media-range) #"/"))]
+                (-> type
+                    (merge (reduce (fn [m s]
+                                     (let [[_ k v] (re-matches #"([^=]*)=(.*)" s)
+                                           k (keyword (s/trim k))]
+                                       (if (= :q k)
+                                         (update m :q #(or % (try
+                                                               (Double/parseDouble v)
+                                                               (catch NumberFormatException e
+                                                                 nil))))
+                                         (if (:q m)
+                                           (update m :accept-params assoc k v)
+                                           (update m :media-range-params assoc k v)))))
+                                   {}
+                                   rest))
+                    (update :q #(or % 1.0)))))
             (s/split accept-header #","))
-       (sort-by-check :parameter nil)
+       (sort-by-check :accept-params nil)
+       (sort-by-check :media-range-params nil)
        (sort-by-check :type "*")
        (sort-by-check :sub-type "*")
        (sort-by :q >)))
@@ -89,7 +90,7 @@
   found, return *nil*. If no *Accept* header is found, return the first
   encoder."
   [encoders req]
-  (if-let [accept (get-in req [:headers "accept"] (:content-type req))]
+  (if-let [accept (get-in req [:headers "accept"])]
     (first (for [accepted-type (if (string? accept)
                                  (parse-accept-header accept)
                                  accept)

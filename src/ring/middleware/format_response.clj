@@ -117,6 +117,7 @@
   [charsets]
   (or
    (->> (sort-by second charsets)
+        (reverse)
         (filter (comp available-charsets first))
         (first)
         (first))

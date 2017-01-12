@@ -20,5 +20,6 @@
           :defaults {:doc/format :markdown}}
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}}
-  :aliases {"all" ["with-profile" "dev:dev,1.6:dev,1.7"]})
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
+             :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha14"]]}}
+  :aliases {"all" ["with-profile" "dev:dev,1.6:dev,1.7:dev,1.9"]})

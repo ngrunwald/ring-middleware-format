@@ -82,7 +82,7 @@
                                    {}
                                    r))
                     (update-in [:q] #(or % 1.0)))))
-            (s/split accept-header #"[\s\n\r]*,[\s\n\r]"))
+            (s/split accept-header #"[\s\n\r]*,[\s\n\r]*"))
        (sort-by-check :type "*")
        (sort-by-check :sub-type "*")
        (sort-by :q >)))

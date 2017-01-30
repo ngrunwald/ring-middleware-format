@@ -199,7 +199,7 @@
              (parse-accept-header* "text/*;x=\"0.0=x\""))))))
 
 (deftest orders-values-correctly
-  (let [accept "text/plain, */*, text/plain;level=1, text/*, text/*;q=0.1"]
+  (let [accept "text/plain,*/*,text/plain;level=1, text/*, text/*;q=0.1"]
     (is (= (parse-accept-header accept)
            (list {:type "text"
                   :sub-type "plain"

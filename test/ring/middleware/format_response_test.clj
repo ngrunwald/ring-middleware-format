@@ -176,15 +176,43 @@
     (is (not (can-encode? encoder
                           {:type "foo" :sub-type "buzz"})))))
 
+(deftest parse-accept-header-test
+  (testing "Accept header media-ranges can contain parameters"
+    (is (= [{:type "multipart"
+             :sub-type "form-data"
+             :boundary "x"
+             :charset "US-ASCII"
+             :q 1.0}]
+           (parse-accept-header* "multipart/form-data; boundary=x; charset=US-ASCII"))))
+
+  (testing "Non-numberic q value is ignored"
+    (is (= [{:type "text"
+             :sub-type "*"
+             :q 1.0}]
+           (parse-accept-header* "text/*;q=x") )))
+
+  (testing "Separators in parameter values (e.g. =) are forbidden"
+    (is (= [{:type "text"
+             :sub-type "*"
+             :q 1.0}]
+           (parse-accept-header* "text/*;x=0.0=x") ))
+
+    (testing "except if quoted"
+      (is (= [{:type "text"
+               :sub-type "*"
+               :q 1.0
+               :x "\"0.0=x\""}]
+             (parse-accept-header* "text/*;x=\"0.0=x\""))))))
+
 (deftest orders-values-correctly
-  (let [accept "text/plain, */*, text/plain;level=1, text/*, text/*;q=0.1"]
+  (let [accept "text/plain,*/*,text/plain;level=1, text/*, text/*;q=0.1"]
     (is (= (parse-accept-header accept)
            (list {:type "text"
                   :sub-type "plain"
-                  :parameter "level=1"
                   :q 1.0}
                  {:type "text"
                   :sub-type "plain"
+                  :level "1"
                   :q 1.0}
                  {:type "text"
                   :sub-type "*"

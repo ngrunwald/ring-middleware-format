@@ -1,4 +1,4 @@
-(defproject ring-middleware-format "0.7.1"
+(defproject ring-middleware-format "0.7.2-SNAPSHOT"
   :description "Ring middleware for parsing parameters and emitting
   responses in various formats (mainly JSON, YAML and Transit out of
   the box)"
@@ -8,13 +8,13 @@
             :distribution :repo
             :comments "same as Clojure"}
   :dependencies [[org.clojure/core.memoize "0.5.9"]
-                 [ring/ring-core "1.4.0"]
-                 [cheshire "5.6.1"]
+                 [ring/ring-core "1.5.1"]
+                 [cheshire "5.7.0"]
                  [org.clojure/tools.reader "0.10.0"]
-                 [com.ibm.icu/icu4j "57.1"]
+                 [com.ibm.icu/icu4j "58.2"]
                  [circleci/clj-yaml "0.5.5"]
-                 [clojure-msgpack "1.1.3"]
-                 [com.cognitect/transit-clj "0.8.285"]]
+                 [clojure-msgpack "1.2.0"]
+                 [com.cognitect/transit-clj "0.8.297"]]
   :plugins [[lein-codox "0.9.4"]]
   :codox {:src-uri "http://github.com/ngrunwald/ring-middleware-format/blob/master/{filepath}#L{line}"
           :defaults {:doc/format :markdown}}

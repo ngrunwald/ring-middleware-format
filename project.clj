@@ -15,7 +15,7 @@
                  [circleci/clj-yaml "0.5.5"]
                  [clojure-msgpack "1.2.0"]
                  [com.cognitect/transit-clj "0.8.297"]]
-  :plugins [[lein-codox "0.9.4"]]
+  :plugins [[lein-codox "0.10.2"]]
   :codox {:src-uri "http://github.com/ngrunwald/ring-middleware-format/blob/master/{filepath}#L{line}"
           :defaults {:doc/format :markdown}}
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]]}

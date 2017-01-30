@@ -9,7 +9,7 @@
             :comments "same as Clojure"}
   :dependencies [[org.clojure/core.memoize "0.5.9"]
                  [ring/ring-core "1.5.1"]
-                 [cheshire "5.7.0"]
+                 [cheshire "5.6.3"]
                  [org.clojure/tools.reader "0.10.0"]
                  [com.ibm.icu/icu4j "58.2"]
                  [circleci/clj-yaml "0.5.5"]

@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/release-0.7.0...master)**
+
 - Fix [#56](https://github.com/ngrunwald/ring-middleware-format/issues/56) use `:key-fn` in `wrap-json-kw-params`
+- Fix [#66](https://github.com/ngrunwald/ring-middleware-format/issues/66) parse-accept header should allow non numeric
+parameters
 
 ## 0.7.0 (2015-11-05)
 

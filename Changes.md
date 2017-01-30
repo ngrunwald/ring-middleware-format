@@ -1,5 +1,14 @@
 # Changes for ring-middleware-format
 
+## Unreleased
+
+**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/release-0.7.2...master)**
+- Dropped support for Java JDK 6
+- Updated deps:
+```
+[cheshire "5.7.0] is available but we use "5.6.3"
+```
+
 ## 0.7.2 (2017-01-30)
 
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/release-0.7.1...0.7.2)**

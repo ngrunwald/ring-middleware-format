@@ -20,11 +20,12 @@
   (into #{} (map s/lower-case (.keySet (Charset/availableCharsets)))))
 
 (defn ^:no-doc serializable?
-  "Predicate that returns true whenever the response body is not a
+  "Predicate that returns true whenever the response body is non-nil, and not a
   String, File or InputStream."
   [_ {:keys [body] :as response}]
   (when response
     (not (or
+          (nil? body)
           (string? body)
           (instance? File body)
           (instance? InputStream body)))))

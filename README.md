@@ -21,7 +21,8 @@ Add this to your dependencies in `project.clj`.
 
 ## API Documentation ##
 
-Full [API documentation](http://ngrunwald.github.com/ring-middleware-format) is available.
+<!--Full [API documentation](http://ngrunwald.github.com/ring-middleware-format) is available.-->
+API Documentation is not available online. You can clone the repository and run `lein codox` yourself.
 
 ## Summary ##
 

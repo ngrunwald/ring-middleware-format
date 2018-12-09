@@ -12,7 +12,7 @@
                  [cheshire "5.7.0"]
                  [org.clojure/tools.reader "0.10.0"]
                  [com.ibm.icu/icu4j "58.2"]
-                 [circleci/clj-yaml "0.5.5"]
+                 [circleci/clj-yaml "0.5.6"]
                  [clojure-msgpack "1.2.0"]
                  [com.cognitect/transit-clj "0.8.297"]]
   :plugins [[lein-codox "0.10.2"]]

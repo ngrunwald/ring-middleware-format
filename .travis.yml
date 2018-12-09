@@ -3,7 +3,6 @@ language: clojure
 lein: 2.8.1
 script: lein all test
 jdk:
-  - openjdk7
   - oraclejdk8
   - openjdk11
 cache:

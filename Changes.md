@@ -3,11 +3,9 @@
 ## Unreleased
 
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/release-0.7.2...master)**
-- Dropped support for Java JDK 6
+- Dropped support for Java JDK 6 and 7
 - Updated deps:
-```
-[cheshire "5.7.0] is available but we use "5.6.3"
-```
+    - New transit-clj requires JDK 8
 
 ## 0.7.2 (2017-01-30)
 

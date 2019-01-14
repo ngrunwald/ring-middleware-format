@@ -3,9 +3,11 @@
 ## Unreleased
 
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/release-0.7.2...master)**
-- Dropped support for Java JDK 6 and 7
+- Add support for Java 11
+- Dropped support for Java 6 and 7
 - Updated deps:
-    - New transit-clj requires JDK 8
+    - New transit-clj requires Java 8
+    - Switched clj-yaml to new `clj-commons/clj-yaml` fork, for Java 11 support
 
 ## 0.7.2 (2017-01-30)
 

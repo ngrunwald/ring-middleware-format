@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/release-0.7.2...master)**
+**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.2...0.7.3)**
 - Add support for Java 11
 - Dropped support for Java 6 and 7
 - Updated deps:

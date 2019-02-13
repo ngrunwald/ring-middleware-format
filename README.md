@@ -132,25 +132,27 @@ For exemple, this will cause all json formatted responses to be encoded in *iso-
 ```
 + You can implement the wrapper from scratch by using either or both `wrap-format-params` and `wrap-format-response`. For now, see the docs of each and how the other formats were implemented for help doing this.
 
-### IBM Icu4j
+### Charset detection
 
-Icu4j is used to guess request charset if the request Content-type header doesn't
+Icu4j can be used to guess request charset for requests where Content-type header doesn't
 define charset, and middleware `:charset` option hasn't been used to set static charset.
-
-If you don't want to use this feature, and want to remove the large Icu4j dependency,
-you can set middleware `:charset` option to alternative function, which will default
-to UTF-8 if Content-type header doesn't have charset:
+To use this feature, add dependency:
 
 ```clj
-(wrap-restful-params ... {:charset get-or-default-charset})
+[com.ibm.icu/icu4j "63.1"]
 ```
 
-(You can also create your own functions if you need other default charsets.)
+Note that icu4j is quite large dependency and will increase your uberjar size by 10MB.
 
-And then you can exclude Icu4j dependency:
+And require separate `guess-charset` namespace which provides function you can use
+with wrap-params `:charset` option:
 
 ```clj
-[ring-middleware-formats "a.b.c" :exclusions [com.ibm.icu/icu4j]]
+(ns example
+  (:require [ring.middleware.format-params.guess-charset :as guess-charset]
+            ...))
+
+(wrap-restful-params ... {:charset guess-charset/get-or-default-charset})
 ```
 
 ## Future Work ##

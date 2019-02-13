@@ -17,13 +17,10 @@
   :plugins [[lein-codox "0.10.2"]]
   :codox {:src-uri "http://github.com/ngrunwald/ring-middleware-format/blob/master/{filepath}#L{line}"
           :defaults {:doc/format :markdown}}
-  ;; Include :icu profile for all tasks, except if with-profile is used without "+"
-  :profiles {:default [:base :system :user :provided :dev :icu]
-             ;; leaky metadata to include this dep in pom.xml
-             :icu ^:leaky {:dependencies [[com.ibm.icu/icu4j "63.1"]]}
+  :profiles {:icu {:dependencies [[com.ibm.icu/icu4j "63.1"]]}
              :dev {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]]}}
-  :aliases {"all" ["with-profile" "default:+1.6:+1.7:+1.8:+1.10:-icu"]})
+  :aliases {"all" ["with-profile" "default:+1.6:+1.7:+1.8:+1.10:+icu"]})

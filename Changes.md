@@ -4,9 +4,14 @@
 
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.3...master)**
 
-- Allow use without icu4j, if guess charset is not used
-    - Add `:charset get-or-default-charset` option to disable charset guessing
-    - Icu4j is still dependency, but you can use exclude
+- Drop dependency on Icu4j and default to no charset detection
+   - Previously ring-middleware-format tried to guess the charset if the request
+   `Content-Type` header didn't set it. **However** the charset detection code
+   has been broken since version 0.4.0, for over four years.
+   - Because no one has noticed during four years that charset detection doesn't work,
+   it is now disabled by default.
+   - Separate `guess-charset` namespace can be used with `:charset` option to
+   enable charset detection (which now works).
 
 ## 0.7.3 (2019-01-14)
 

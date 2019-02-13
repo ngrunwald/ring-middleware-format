@@ -2,7 +2,16 @@
 
 ## Unreleased
 
+**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.3...master)**
+
+- Allow use without icu4j, if guess charset is not used
+    - Add `:charset get-or-default-charset` option to disable charset guessing
+    - Icu4j is still dependency, but you can use exclude
+
+## 0.7.3 (2019-01-14)
+
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.2...0.7.3)**
+
 - Add support for Java 11
 - Dropped support for Java 6 and 7
 - Updated deps:

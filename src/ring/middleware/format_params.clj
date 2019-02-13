@@ -7,8 +7,7 @@
             [clojure.walk :refer [keywordize-keys]]
             [cognitect.transit :as transit]
             [msgpack.core :as msgpack])
-  (:import [com.ibm.icu.text CharsetDetector]
-           [java.io ByteArrayInputStream InputStream ByteArrayOutputStream]
+  (:import [java.io ByteArrayInputStream InputStream ByteArrayOutputStream]
            [java.nio.charset Charset]))
 
 (set! *warn-on-reflection* true)
@@ -16,18 +15,6 @@
 (def available-charsets
   "Set of recognised charsets by the current JVM"
   (into #{} (map str/lower-case (.keySet (Charset/availableCharsets)))))
-
-(defn ^:no-doc guess-charset
-  [{:keys [#^bytes body]}]
-  (try
-    (let [#^CharsetDetector detector (CharsetDetector.)]
-      (.enableInputFilter detector true)
-      (.setText detector body)
-      (let [m (.detect detector)
-            encoding (.getName m)]
-        (if (available-charsets encoding)
-          encoding)))
-    (catch Exception _ nil)))
 
 (defn ^:no-doc get-charset
   [{:keys [content-type] :as req}]
@@ -38,9 +25,11 @@
   "Tries to get the request encoding from the header or guess
   it if not given in *Content-Type*. Defaults to *utf-8*"
   [req]
+  ;; TODO: Does require + resolve affect performance?
+  (require 'ring.middleware.format-params.guess-charset)
   (or
    (get-charset req)
-   (guess-charset req)
+   ((resolve 'ring.middleware.format-params.guess-charset/guess-charset) req)
    "utf-8"))
 
 (defn ^:no-doc get-or-default-charset

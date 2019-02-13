@@ -2,32 +2,38 @@
   (:use [clojure.test]
         [ring.middleware.format])
   (:require [cheshire.core :as json]
-            [clj-yaml.core :as yaml])
+            [clj-yaml.core :as yaml]
+            [ring.middleware.format-params :refer [get-or-default-charset]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn stream [s]
   (ByteArrayInputStream. (.getBytes s "UTF-8")))
 
 (def restful-echo
-  (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))))
+  (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))
+                       {:charset get-or-default-charset}))
 
 (def restful-echo-opts-map
-  (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))))
+  (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))
+                       {:charset get-or-default-charset}))
 
 (def restful-echo-json
   (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))
-                       :formats [:json-kw]))
+                       {:formats [:json-kw]
+                        :charset get-or-default-charset}))
 
 (def restful-echo-yaml
   (wrap-restful-format (fn [req] (assoc req :body (vals (:body-params req))))
-                       :formats [:yaml-kw]))
+                       {:formats [:yaml-kw]
+                        :charset get-or-default-charset}))
 
 (deftest format-json-prettily-from-wrap-restful-format
   ;; like format-response-test/format-json-prettily but starting from higher in the call stack
   (let [body {:foo "bar"}
         req {:body body}
-        resp ((wrap-restful-format identity :formats [:json-kw]
-                                            :response-options {:json-kw {:pretty true}})
+        resp ((wrap-restful-format identity {:formats [:json-kw]
+                                             :response-options {:json-kw {:pretty true}}
+                                             :charset get-or-default-charset})
                req)]
     (is (.contains (-> resp :body slurp) "\n "))))
 

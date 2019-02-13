@@ -16,7 +16,7 @@
   (ByteArrayInputStream. (.getBytes s "UTF-8")))
 
 (def json-echo
-  (wrap-json-params identity))
+  (wrap-json-params identity {:charset get-or-default-charset}))
 
 ;; stolen from ring-json-params to confirm compatibility
 
@@ -50,20 +50,23 @@
 
 (deftest json-options-test
   (is (= {:foo-bar "bar"}
-         (:body-params ((wrap-json-params identity {:options {:key-fn key-fn}})
+         (:body-params ((wrap-json-params identity {:options {:key-fn key-fn}
+                                                    :charset get-or-default-charset})
                         {:content-type "application/json"
                          :body (stream "{\"foo_bar\":\"bar\"}")}))))
   (is (= {:foo-bar "bar"}
-         (:body-params ((wrap-json-kw-params identity {:options {:key-fn key-fn}})
+         (:body-params ((wrap-json-kw-params identity {:options {:key-fn key-fn}
+                                                       :charset get-or-default-charset})
                         {:content-type "application/json"
                          :body (stream "{\"foo_bar\":\"bar\"}")}))))
   (is (= {:foo-bar "bar"}
-         (:body-params ((wrap-restful-params identity {:format-options {:json {:key-fn key-fn}}})
+         (:body-params ((wrap-restful-params identity {:format-options {:json {:key-fn key-fn}}
+                                                       :charset get-or-default-charset})
                         {:content-type "application/json"
                          :body (stream "{\"foo_bar\":\"bar\"}")})))))
 
 (def yaml-echo
-  (wrap-yaml-params identity))
+  (wrap-yaml-params identity {:charset get-or-default-charset}))
 
 (deftest augments-with-yaml-content-type
   (let [req {:content-type "application/x-yaml; charset=UTF-8"
@@ -74,7 +77,7 @@
     (is (= {:foo "bar"} (:body-params resp)))))
 
 (def msgpack-echo
-  (wrap-msgpack-params identity))
+  (wrap-msgpack-params identity {:charset get-or-default-charset}))
 
 (deftest augments-with-msgpack-content-type
   (let [req {:content-type "application/msgpack"
@@ -85,7 +88,7 @@
     (is (= {"foo" "bar"} (:body-params resp)))))
 
 (def msgpack-kw-echo
-  (wrap-msgpack-kw-params identity))
+  (wrap-msgpack-kw-params identity {:charset get-or-default-charset}))
 
 (deftest augments-with-msgpack-kw-content-type
   (let [req {:content-type "application/msgpack"
@@ -96,7 +99,7 @@
     (is (= {:foo "bar"} (:body-params resp)))))
 
 (def clojure-echo
-  (wrap-clojure-params identity))
+  (wrap-clojure-params identity {:charset get-or-default-charset}))
 
 (deftest augments-with-clojure-content-type
   (let [req {:content-type "application/clojure; charset=UTF-8"
@@ -144,7 +147,7 @@
     (io/input-stream (.toByteArray out))))
 
 (def transit-json-echo
-  (wrap-transit-json-params identity))
+  (wrap-transit-json-params identity {:charset get-or-default-charset}))
 
 (deftest augments-with-transit-json-content-type
   (let [req {:content-type "application/transit+json"
@@ -155,7 +158,7 @@
     (is (= {:foo "bar"} (:body-params resp)))))
 
 (def transit-msgpack-echo
-  (wrap-transit-msgpack-params identity))
+  (wrap-transit-msgpack-params identity {:charset get-or-default-charset}))
 
 (deftest augments-with-transit-msgpack-content-type
   (let [req {:content-type "application/transit+msgpack"
@@ -170,14 +173,15 @@
 ;;;;;;;;;;;;;;;;;;;;
 
 (def restful-echo
-  (wrap-restful-params identity))
+  (wrap-restful-params identity {:charset get-or-default-charset}))
 
 (def safe-restful-echo
-  (wrap-restful-params identity
-                       :handle-error (fn [_ _ _] {:status 500})))
+  (wrap-restful-params identity {:handle-error (fn [_ _ _] {:status 500})
+                                 :charset get-or-default-charset}))
 
 (def safe-restful-echo-opts-map
-  (wrap-restful-params identity {:handle-error (fn [_ _ _] {:status 500})}))
+  (wrap-restful-params identity {:handle-error (fn [_ _ _] {:status 500})
+                                 :charset get-or-default-charset}))
 
 (deftest test-restful-params-wrapper
   (let [req {:content-type "application/clojure; charset=UTF-8"
@@ -205,13 +209,15 @@
              :body (ByteArrayInputStream.
                     (.getBytes "[\"gregor\", \"samsa\"]"))}]
     ((wrap-json-params
-      (fn [{:keys [body-params]}] (is (= ["gregor" "samsa"] body-params))))
+      (fn [{:keys [body-params]}] (is (= ["gregor" "samsa"] body-params)))
+      {:charset get-or-default-charset})
      req)))
 
 (deftest test-optional-body
   ((wrap-json-params
     (fn [request]
-      (is (nil? (:body request)))))
+      (is (nil? (:body request))))
+    {:charset get-or-default-charset})
    {:body nil}))
 
 (deftest test-custom-handle-error
@@ -219,8 +225,9 @@
     (let [req {:body body
                :content-type content-type}
           resp ((wrap-restful-params identity
-                                     :formats [format]
-                                     :handle-error (constantly {:status 999}))
+                                     {:formats [format]
+                                      :handle-error (constantly {:status 999})
+                                      :charset get-or-default-charset})
                 req)]
       (= 999 (:status resp)))
     :json "application/json" "{:a 1}"
@@ -236,10 +243,12 @@
   {"Point" (transit/read-handler (fn [[x y]] (Point. x y)))})
 
 (def custom-transit-json-echo
-  (wrap-transit-json-params identity :options {:handlers readers}))
+  (wrap-transit-json-params identity {:options {:handlers readers}
+                                      :charset get-or-default-charset}))
 
 (def custom-restful-transit-json-echo
-  (wrap-restful-params identity :format-options {:transit-json {:handlers readers}}))
+  (wrap-restful-params identity {:format-options {:transit-json {:handlers readers}}
+                                 :charset get-or-default-charset}))
 
 (def transit-body "[\"^ \", \"~:p\", [\"~#Point\",[1,2]]]")
 
@@ -256,3 +265,34 @@
       (is (= {:p (Point. 1 2)}
              (:params req)
              (:body-params req))))))
+
+;;
+;; Guess charset
+;;
+
+(def icu-available? (try (Class/forName "com.ibm.icu.text.CharsetDetector")
+                         true
+                         (catch ClassNotFoundException _
+                           false)))
+
+(def json-guess-charset
+  (wrap-json-params identity {:charset get-or-guess-charset}))
+
+(deftest guess-charset-test
+  (if icu-available?
+    (do
+      (let [ba (byte-array (concat (.getBytes "{\"foo\":\"")
+                                   ;; föäo in ISO encoding
+                                   [98 246 228 114]
+                                   (.getBytes "\"}")))
+            req {:content-type "application/json"
+                 :body (ByteArrayInputStream. ba)}
+            resp (json-guess-charset req)]
+        (require 'ring.middleware.format-params.guess-charset)
+        (is (= "ISO-8859-1" ((resolve 'ring.middleware.format-params.guess-charset/guess-charset) {:body ba})))
+        ;; decoded to current Java charset
+        (is (= {"foo" "böär"} (:body-params resp)))))
+    (do
+      (let [req {:content-type "application/json"
+                 :body (stream "{\"foo\":\"bar\"}")}]
+        (is (thrown? Exception (json-guess-charset req)))))))

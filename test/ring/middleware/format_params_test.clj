@@ -256,3 +256,28 @@
       (is (= {:p (Point. 1 2)}
              (:params req)
              (:body-params req))))))
+
+;;
+;; Guess charset
+;;
+
+(def icu-available? (try (Class/forName "com.ibm.icu.text.CharsetDetector")
+                         true
+                         (catch ClassNotFoundException _
+                           false)))
+
+(when icu-available?
+  (deftest guess-charset-test
+    (println "Testing charset detection")
+    (require 'ring.middleware.format-params.guess-charset)
+    (let [json-guess-charset (wrap-json-params identity {:charset (resolve 'ring.middleware.format-params.guess-charset/get-or-guess-charset)})
+          ba (byte-array (concat (.getBytes "{\"foo\":\"")
+                                 ;; föäo in ISO encoding
+                                 [98 246 228 114]
+                                 (.getBytes "\"}")))
+          req {:content-type "application/json"
+               :body (ByteArrayInputStream. ba)}
+          resp (json-guess-charset req)]
+      (is (= "ISO-8859-1" ((resolve 'ring.middleware.format-params.guess-charset/guess-charset) {:body ba})))
+      ;; decoded to current Java charset
+      (is (= {"foo" "böär"} (:body-params resp))))))

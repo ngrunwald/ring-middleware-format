@@ -7,41 +7,14 @@
             [clojure.walk :refer [keywordize-keys]]
             [cognitect.transit :as transit]
             [msgpack.core :as msgpack])
-  (:import [com.ibm.icu.text CharsetDetector]
-           [java.io ByteArrayInputStream InputStream ByteArrayOutputStream]
-           [java.nio.charset Charset]))
+  (:import [java.io ByteArrayInputStream InputStream ByteArrayOutputStream]))
 
 (set! *warn-on-reflection* true)
-
-(def available-charsets
-  "Set of recognised charsets by the current JVM"
-  (into #{} (map str/lower-case (.keySet (Charset/availableCharsets)))))
-
-(defn ^:no-doc guess-charset
-  [{:keys [#^bytes body]}]
-  (try
-    (let [#^CharsetDetector detector (CharsetDetector.)]
-      (.enableInputFilter detector true)
-      (.setText detector body)
-      (let [m (.detect detector)
-            encoding (.getName m)]
-        (if (available-charsets encoding)
-          encoding)))
-    (catch Exception _ nil)))
 
 (defn ^:no-doc get-charset
   [{:keys [content-type] :as req}]
   (if content-type
     (second (re-find #";\s*charset=([^\s;]+)" content-type))))
-
-(defn get-or-guess-charset
-  "Tries to get the request encoding from the header or guess
-  it if not given in *Content-Type*. Defaults to *utf-8*"
-  [req]
-  (or
-   (get-charset req)
-   (guess-charset req)
-   "utf-8"))
 
 (defn ^:no-doc get-or-default-charset
   [req]
@@ -96,7 +69,7 @@
                      to just rethrowing the Exception"
   [handler & args]
   (let [{:keys [predicate decoder charset handle-error binary?] :as options} (impl/extract-options args)
-        charset (or charset get-or-guess-charset)
+        charset (or charset get-or-default-charset)
         handle-error (or handle-error default-handle-error)]
     (fn [{:keys [#^InputStream body] :as req}]
       (try

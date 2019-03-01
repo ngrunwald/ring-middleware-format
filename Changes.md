@@ -1,8 +1,8 @@
 # Changes for ring-middleware-format
 
-## Unreleased
+## 0.7.4 (2019-03-01)
 
-**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.3...master)**
+**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.3...0.7.4)**
 
 - Drop dependency on Icu4j and default to no charset detection
    - Previously ring-middleware-format tried to guess the charset if the request

@@ -1,4 +1,4 @@
-# ring-middleware-format [![Continuous Integration status](https://secure.travis-ci.org/ngrunwald/ring-middleware-format.png)](http://travis-ci.org/ngrunwald/ring-middleware-format) [![Dependencies Status](http://jarkeeper.com/ngrunwald/ring-middleware-format/status.svg)](http://jarkeeper.com/ngrunwald/ring-middleware-format)
+# ring-middleware-format [![Continuous Integration status](https://secure.travis-ci.org/ngrunwald/ring-middleware-format.png)](http://travis-ci.org/ngrunwald/ring-middleware-format)
 
 **NOTICE:** For modern HTTP content negotiation, encoding and decoding library, check [Muuntaja](https://github.com/metosin/muuntaja/). Currently there are not plans to implement big changes to Ring-middleware-format.
 
@@ -141,7 +141,7 @@ define charset, and middleware `:charset` option hasn't been used to set static 
 To use this feature, add dependency:
 
 ```clj
-[com.ibm.icu/icu4j "63.1"]
+[com.ibm.icu/icu4j "70.1"]
 ```
 
 Note that icu4j is quite large dependency and will increase your uberjar size by 10MB.

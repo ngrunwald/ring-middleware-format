@@ -1,5 +1,22 @@
 # Changes for ring-middleware-format
 
+## Unreleased
+
+**[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.4...0.7.5)**
+
+- Update dependencies.
+    - New clj-yaml needs Clojure 1.7+ so 1.6.0 is no longer supported.
+
+```
+[org.clojure/core.memoize "1.0.257"] is available but we use "0.7.1"
+[ring/ring-core "1.9.5"] is available but we use "1.7.1"
+[cheshire "5.10.2"] is available but we use "5.8.1"
+[org.clojure/tools.reader "1.3.6"] is available but we use "1.3.2"
+[clj-commons/clj-yaml "0.7.108"] is available but we use "0.6.0"
+[com.cognitect/transit-clj "1.0.329"] is available but we use "0.8.313"
+[com.ibm.icu/icu4j "70.1"] is available but we use "63.1"
+```
+
 ## 0.7.4 (2019-03-01)
 
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.3...0.7.4)**

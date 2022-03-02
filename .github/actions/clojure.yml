@@ -1,0 +1,31 @@
+name: Run tests
+
+on:
+  push:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-clj:
+    strategy:
+      matrix:
+        # Supported Java versions: LTS releases 8 and 11 and the latest release
+        jdk: [8, 11, 17]
+
+    name: Clojure (Java ${{ matrix.jdk }})
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Java ${{ matrix.jdk }}
+      uses: actions/setup-java@v2
+      with:
+        distribution: temurin
+        java-version: ${{ matrix.jdk }}
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@3.1
+      with:
+        lein: latest
+    - name: Run Clojure test
+      run: lein all test

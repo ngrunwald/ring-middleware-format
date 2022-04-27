@@ -1,6 +1,6 @@
 # Changes for ring-middleware-format
 
-## Unreleased
+## 0.7.5 (2022-03-02)
 
 **[compare](https://github.com/ngrunwald/ring-middleware-format/compare/0.7.4...0.7.5)**
 

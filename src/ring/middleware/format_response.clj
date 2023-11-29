@@ -186,10 +186,10 @@
  + **:handle-error** is a fn with a sig [exception request response]. Defaults
                      to just rethrowing the Exception"
   [handler & args]
-  (let [{:keys [predicate encoders charset binary? handle-error]} (impl/extract-options args)
+  (let [{:keys [response-predicate predicate encoders charset binary? handle-error]} (impl/extract-options args)
         charset (or charset default-charset-extractor)
         handle-error (or handle-error default-handle-error)
-        predicate (or predicate serializable?)]
+        predicate (or response-predicate predicate serializable?)]
     (fn [req]
       (let [{:keys [headers body] :as response} (handler req)]
         (try
